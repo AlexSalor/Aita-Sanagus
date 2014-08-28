@@ -12,23 +12,36 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CalendarView;
 import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Date;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -44,6 +57,11 @@ public class MainActivity extends ActionBarActivity {
     Integer listViewPeopleId;
     Usuarios UsusrioActivo=null;
     Usuarios[] listaUsuarios;
+    //Boton
+    Button Aceptar;
+    //Calendario
+    CalendarView Calendario;
+
 
 
 
@@ -56,16 +74,44 @@ public class MainActivity extends ActionBarActivity {
 
 
         //MAPEAMOS LOS CONTROLES DE LA UI
-
         Resultado = new TextView(this);
        // Resultado=(TextView)findViewById(R.id.ipini);
         lsvAndroidOS = (Spinner)findViewById(R.id.lst);
+        Aceptar = (Button) findViewById(R.id.button) ;
+        Calendario = (CalendarView) findViewById( (R.id.calendarView));
 
-
-        //Obtenemos los usuarios de la APP
+        //OBTENEMOS LOS USUARIOS
         new ObtenerUsuarios().execute("");
 
+
+
+
+        //EVENTOS************************
+
+        Aceptar.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+                //Recogemos datos y enviamos la información
+
+                String Socio = lsvAndroidOS.getSelectedItem().toString();
+
+
+                       new RealizarReserba().execute("");
+
+
+
+
+            }
+
+        });
+
+
+
+
     }
+
+
 
 
     private void refreshMoviesList(String[] ListaUsuarios)
@@ -190,6 +236,78 @@ public class MainActivity extends ActionBarActivity {
 
             }
 
+        }
+
+    }
+
+
+    public class RealizarReserba extends AsyncTask <String, Float, String>{
+
+        String URL, MiKey,Reserbas,Sentencia;
+        String SQL;
+
+        public RealizarReserba() {
+
+            URL= "https://www.googleapis.com/fusiontables/v1/query?";
+            MiKey="&key=AIzaSyDgF_jRMOGaXdpLEptoRa35zYqOEQU5lWo";
+            Reserbas="1kbVkjkfdAL1O5VUDQX5DKJQSQ0jpb4YBCM9XwXs";
+            SQL = "sql=INSERT%20INTO%20" + Reserbas + "%20(socioID,Date,comentario)%20VALUES%20(1,2014-01-01,'vamoss')";
+
+            Sentencia= URL+SQL+MiKey;
+
+        }
+        protected void onPreExecute() {
+            //dialog.setProgress(0);
+            //dialog.setMax(100);
+            //dialog.show(); //Mostramos el diálogo antes de comenzar
+        }
+
+        protected String doInBackground(String... url) {
+
+            String responseString="";
+
+            try {
+                HttpClient httpclient = new DefaultHttpClient();
+                HttpPost httppost = new HttpPost(Sentencia);
+                HttpResponse  response = httpclient.execute(httppost);
+                HttpEntity entity = response.getEntity();
+                if(entity != null){
+                    return EntityUtils.toString(entity);
+                }
+                else{
+                    return "No string.";
+                }
+
+               /* HttpResponse response = httpclient.execute(new HttpPost(Sentencia));
+                StatusLine statusLine = response.getStatusLine();
+                if(statusLine.getStatusCode() == HttpStatus.SC_OK){
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    response.getEntity().writeTo(out);
+                    out.close();
+                    responseString = out.toString();
+                    //..more logic
+                } else{
+                    //Closes the connection.
+                    response.getEntity().getContent().close();
+                    throw new IOException(statusLine.getReasonPhrase());
+                }*/
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+            return responseString;
+        }
+
+        protected void onProgressUpdate (Float... valores) {
+            //int p = Math.round(100*valores[0]);
+            //diStrialog.setProgress(p);
+        }
+        protected void onPostExecute(String ResultadoQ) {
+        try{
+                JSONObject jsonResponse = new JSONObject(ResultadoQ);
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         }
 
     }
